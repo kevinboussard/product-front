@@ -1,0 +1,217 @@
+<p-toast></p-toast>
+
+<div class="app-frame">
+  <p-toolbar styleClass="mb-4 gap-2">
+    <ng-template pTemplate="left">
+      <button
+        pButton
+        pRipple
+        label="New"
+        icon="pi pi-plus"
+        class="p-button-success mr-2"
+        (click)="openNew()"
+      ></button>
+      <button
+        pButton
+        pRipple
+        label="Delete"
+        icon="pi pi-trash"
+        class="p-button-danger"
+        (click)="deleteSelectedProducts()"
+        [disabled]="!selectedProducts || !selectedProducts.length"
+      ></button>
+    </ng-template>
+  </p-toolbar>
+
+  <p-table
+    #dt
+    [value]="products"
+    [rows]="10"
+    [paginator]="true"
+    [globalFilterFields]="['code', 'name']"
+    [(selection)]="selectedProducts"
+    [rowHover]="true"
+    dataKey="id"
+    styleClass="p-datatable-striped"
+    currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries"
+    [showCurrentPageReport]="true"
+  >
+    <ng-template pTemplate="header">
+      <tr>
+        <th style="width: 4rem">
+          <p-tableHeaderCheckbox></p-tableHeaderCheckbox>
+        </th>
+        <th pSortableColumn="code" style="min-width: 15rem">
+          Code <p-sortIcon field="code"></p-sortIcon>
+        </th>
+        <th pSortableColumn="name" style="min-width: 15rem">
+          Name <p-sortIcon field="name"></p-sortIcon>
+        </th>
+        <th>Actions</th>
+      </tr>
+      <tr>
+        <th></th>
+        <th>
+          <p-columnFilter type="text" field="code"></p-columnFilter>
+        </th>
+        <th>
+          <p-columnFilter type="text" field="name"></p-columnFilter>
+        </th>
+        <th></th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-product>
+      <tr>
+        <td>
+          <p-tableCheckbox [value]="product"></p-tableCheckbox>
+        </td>
+        <td>{{ product.code }}</td>
+        <td>{{ product.name }}</td>
+        <td>
+          <button
+            pButton
+            pRipple
+            icon="pi pi-pencil"
+            class="p-button-sm p-button-rounded p-button-text"
+            pTooltip="Edit"
+            (click)="editProduct(product)"
+          ></button>
+          <button
+            pButton
+            pRipple
+            icon="pi pi-trash"
+            class="p-button-sm p-button-rounded p-button-text p-button-danger"
+            pTooltip="Delete"
+            (click)="deleteProduct(product)"
+          ></button>
+        </td>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="summary">
+      <div class="flex align-items-center justify-content-between">
+        In total there are {{ products ? products.length : 0 }} products.
+      </div>
+    </ng-template>
+  </p-table>
+</div>
+
+<p-dialog
+  [(visible)]="productDialog"
+  [style]="{ width: '450px' }"
+  header="Product Details"
+  [modal]="true"
+  styleClass="p-fluid"
+>
+  <ng-template pTemplate="content">
+    <form
+      [formGroup]="productForm"
+      (ngSubmit)="saveProduct()"
+      novalidate
+      autocomplete="false"
+    >
+      <div class="field">
+        <label for="code">Code *</label>
+        <input
+          type="text"
+          pInputText
+          id="code"
+          formControlName="code"
+          required
+        />
+        <small class="p-error" *ngIf="submitted && !codeControl.value"
+          >Code is required.</small
+        >
+      </div>
+      <div class="field">
+        <label for="name">Name *</label>
+        <input type="text" pInputText id="name" formControlName="name" />
+        <small class="p-error" *ngIf="submitted && !nameControl.value"
+          >Name is required.</small
+        >
+      </div>
+      <div class="field">
+        <label for="description">Description *</label>
+        <textarea
+          id="description"
+          pInputTextarea
+          formControlName="description"
+          rows="3"
+          cols="20"
+        ></textarea>
+        <small class="p-error" *ngIf="submitted && !descriptionControl.value"
+          >Description is required.</small
+        >
+      </div>
+      <div class="field">
+        <label for="inventoryStatus">Inventory Status *</label>
+        <p-dropdown
+          formControlName="inventoryStatus"
+          inputId="inventoryStatus"
+          [options]="statuses"
+          placeholder="Select"
+        >
+          <ng-template let-option pTemplate="item">
+            <span [class]="'product-badge status-' + option.value">{{
+              option.label
+            }}</span>
+          </ng-template>
+        </p-dropdown>
+        <small
+          class="p-error"
+          *ngIf="submitted && !inventoryStatusControl.value"
+          >Inventory Status is required.</small
+        >
+      </div>
+      <div class="field">
+        <label class="mb-3">Category *</label>
+        <p-dropdown
+          formControlName="category"
+          inputId="category"
+          [options]="categories"
+          placeholder="Select"
+        >
+          <ng-template let-option pTemplate="item">
+            <span [class]="'product-badge status-' + option.value">{{
+              option.label
+            }}</span>
+          </ng-template>
+        </p-dropdown>
+        <small class="p-error" *ngIf="submitted && !categoryControl.value"
+          >Category is required.</small
+        >
+      </div>
+      <div class="field">
+        <label for="price">Price *</label>
+        <p-inputNumber
+          id="price"
+          formControlName="price"
+          mode="currency"
+          currency="USD"
+          locale="en-US"
+        ></p-inputNumber>
+        <small class="p-error" *ngIf="submitted && !priceControl.value"
+          >Price is required.</small
+        >
+      </div>
+      <div class="field">
+        <label for="quantity">Quantity</label>
+        <p-inputNumber id="quantity" formControlName="quantity"></p-inputNumber>
+      </div>
+      <div class="field">
+        <label for="rating">Rating</label>
+        <p-rating formControlName="rating"></p-rating>
+      </div>
+
+      <button
+        type="submit"
+        pButton
+        pRipple
+        label="Save"
+        icon="pi pi-check"
+        class="p-button-text"
+      ></button>
+    </form>
+  </ng-template>
+</p-dialog>
+
+<p-confirmDialog [style]="{ width: '450px' }"></p-confirmDialog>
